@@ -45,6 +45,8 @@
     <div animate:flip={{ duration: 400 }}>
       <MeetupItem {meetup} on:togglefavorite on:showdetails on:edit />
     </div>
+  {:else}
+    <p id="no-meetups">No meetups found.</p>
   {/each}
 </section>
 
@@ -60,6 +62,10 @@
     margin: 1rem;
     display: flex;
     justify-content: space-between;
+  }
+
+  #no-meetups {
+    margin: 1rem;
   }
 
   @media (min-width: 768px) {

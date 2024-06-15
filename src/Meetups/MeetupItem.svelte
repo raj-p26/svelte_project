@@ -4,7 +4,8 @@
   import meetupStore from "./meetups-store";
   import { createEventDispatcher } from "svelte";
   import { scale } from "svelte/transition";
-  import { flip } from "svelte/animate";
+  import LoadingSpinner from "../UI/LoadingSpinner.svelte";
+  // import { flip } from "svelte/animate";
 
   const dispatch = createEventDispatcher();
 
@@ -23,9 +24,29 @@
 
   /** @type {MeetUp} */
   export let meetup;
+  let isLoading = false;
 
-  const toggleFavorite = (event) => {
-    meetupStore.toggleFavorite(meetup.id);
+  const toggleFavorite = () => {
+    isLoading = true;
+    fetch(
+      `https://svelte-course-4f415-default-rtdb.firebaseio.com/meetups/${meetup.id}.json`,
+      {
+        method: "PATCH",
+        body: JSON.stringify({ isFavorite: !meetup.isFavorite }),
+        headers: { "Content-Type": "application/json" },
+      }
+    )
+      .then((res) => {
+        if (!res.ok) {
+          throw new Error("Error updating value");
+        }
+        meetupStore.toggleFavorite(meetup.id);
+        isLoading = false;
+      })
+      .catch((err) => {
+        console.log(err);
+        isLoading = false;
+      });
   };
 </script>
 
@@ -54,14 +75,19 @@
     >
       Edit
     </Button>
-    <Button
-      type="button"
-      color={meetup.isFavorite ? null : "success"}
-      mode="outline"
-      on:click={toggleFavorite}
-    >
-      {meetup.isFavorite ? "Unfavorite" : "Favorite"}
-    </Button>
+    {#if isLoading}
+      <!-- <LoadingSpinner /> -->
+      <span>Changing...</span>
+    {:else}
+      <Button
+        type="button"
+        color={meetup.isFavorite ? null : "success"}
+        mode="outline"
+        on:click={toggleFavorite}
+      >
+        {meetup.isFavorite ? "Unfavorite" : "Favorite"}
+      </Button>
+    {/if}
     <Button type="button" on:click={() => dispatch("showdetails", meetup.id)}
       >Show Details</Button
     >

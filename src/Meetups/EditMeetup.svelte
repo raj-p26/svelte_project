@@ -56,9 +56,41 @@
     };
 
     if (id) {
-      meetupStore.update(id, meetupData);
+      fetch(
+        `https://svelte-course-4f415-default-rtdb.firebaseio.com/meetups/${id}.json`,
+        {
+          method: "PATCH",
+          body: JSON.stringify(meetupData),
+          headers: { "Content-Type": "application/json" },
+        }
+      )
+        .then((res) => {
+          if (!res.ok) {
+            throw new Error("Error occured");
+          }
+          meetupStore.update(id, meetupData);
+        })
+        .catch(console.log);
     } else {
-      meetupStore.add(meetupData);
+      fetch(
+        "https://svelte-course-4f415-default-rtdb.firebaseio.com/meetups.json",
+        {
+          method: "POST",
+          body: JSON.stringify({ ...meetupData, isFavorite: false }),
+          headers: { "Content-Type": "application/json" },
+        }
+      )
+        .then((res) => {
+          if (!res.ok) {
+            throw new Error("An error occured, please try again!");
+          }
+
+          return res.json();
+        })
+        .then((data) => {
+          meetupStore.add({ ...meetupData, isFavorite: false, id: data.name });
+        })
+        .catch(console.log);
     }
 
     dispatch("save");
@@ -66,7 +98,19 @@
 
   const cancel = () => dispatch("cancel");
   const deleteMeetup = () => {
-    meetupStore.remove(id);
+    fetch(
+      `https://svelte-course-4f415-default-rtdb.firebaseio.com/meetups/${id}.json`,
+      {
+        method: "DELETE",
+      }
+    )
+      .then((res) => {
+        if (!res.ok) {
+          throw new Error("Error updating value");
+        }
+        meetupStore.remove(id);
+      })
+      .catch(console.log);
     dispatch("save");
   };
 </script>
